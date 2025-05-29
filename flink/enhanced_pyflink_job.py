@@ -1,7 +1,5 @@
 from pyflink.datastream import StreamExecutionEnvironment
 from pyflink.table import StreamTableEnvironment, EnvironmentSettings
-from pyflink.table.catalog import HiveCatalog
-from pyflink.table.expressions import col, lit
 
 def create_kafka_table(table_env, topic_name):
     """Create a table connected to Kafka"""

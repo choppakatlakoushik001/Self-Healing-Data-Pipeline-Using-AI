@@ -25,6 +25,12 @@ services:
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,INTERNAL://broker:29092
       KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    healthcheck:
+      test: ["CMD", "kafka-topics", "--bootstrap-server", "broker:29092", "--list"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
 
   flink-jobmanager:
       build:
@@ -38,6 +44,7 @@ services:
         - JOB_MANAGER_RPC_ADDRESS=flink-jobmanager
       volumes:
         - ./flink/pyflink_kafka_job.py:/opt/flink/pyflink_kafka_job.py
+        - ./flink/simple_enhanced_job.py:/opt/flink/simple_enhanced_job.py
 
   flink-taskmanager:
       build:
@@ -57,5 +64,8 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      - broker
+      broker:
+        condition: service_healthy
+    restart: on-failure
+    command: /bin/sh -c "sleep 15 && uvicorn main:app --host 0.0.0.0 --port 8000 --reload --log-level debug"
       
