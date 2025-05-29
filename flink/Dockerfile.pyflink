@@ -1,0 +1,18 @@
+FROM flink:latest
+
+# Install Python
+RUN apt-get update -y && \
+    apt-get install -y python3 python3-pip python3-dev && \
+    ln -s /usr/bin/python3 /usr/bin/python && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install PyFlink
+RUN pip3 install apache-flink==1.17.1
+
+# Copy the connector JARs
+COPY jars/flink-connector-kafka-1.17.1.jar /opt/flink/lib/
+COPY jars/kafka-clients-3.4.0.jar /opt/flink/lib/
+
+# Set working directory
+WORKDIR /opt/flink 

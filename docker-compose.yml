@@ -1,4 +1,3 @@
-version: '3.8'
 services:
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
@@ -21,6 +20,42 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,INTERNAL:PLAINTEXT
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,INTERNAL://broker:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,INTERNAL://broker:29092
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+  flink-jobmanager:
+      build:
+        context: ./flink
+        dockerfile: Dockerfile.pyflink
+      container_name: flink-jobmanager
+      ports:
+        - "8081:8081"
+      command: jobmanager
+      environment:
+        - JOB_MANAGER_RPC_ADDRESS=flink-jobmanager
+      volumes:
+        - ./flink/pyflink_kafka_job.py:/opt/flink/pyflink_kafka_job.py
+
+  flink-taskmanager:
+      build:
+        context: ./flink
+        dockerfile: Dockerfile.pyflink
+      container_name: flink-taskmanager
+      depends_on:
+        - flink-jobmanager
+      command: taskmanager
+      environment:
+        - JOB_MANAGER_RPC_ADDRESS=flink-jobmanager
+
+  fastapi:
+    build:
+      context: ./fastapi_app
+    container_name: fastapi
+    ports:
+      - "8000:8000"
+    depends_on:
+      - broker
+      
