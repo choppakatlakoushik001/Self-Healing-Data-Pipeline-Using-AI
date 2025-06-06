@@ -1,6 +1,7 @@
 from confluent_kafka import Consumer
 import json
 import time
+import string
 
 def main():
     # Configure consumer specifically for Docker environment
@@ -62,7 +63,7 @@ def main():
                         words = message_text.lower().split()
                         for word in words:
                             # Strip punctuation
-                            word = word.strip('.,!?;:"\'')
+                            word = word.strip(string.punctuation)
                             if word:
                                 if word in word_counts:
                                     word_counts[word] += 1
